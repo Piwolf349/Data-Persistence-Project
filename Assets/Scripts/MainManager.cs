@@ -17,7 +17,9 @@ public class MainManager : MonoBehaviour
     public Text ScoreText;
     public GameObject GameOverText;
 
-    public Text highScore;
+    public Text highScoreShown;
+    private string highScorePlayer;
+    private int maxScore;
 
 
     private bool m_Started = false;
@@ -31,10 +33,10 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log(Application.persistentDataPath);
-        //pb avec le load a priori, ça deselect le field et du coup le jeu trouve rien
-        //manque le load du highscore
-        //LoadHighScore();
+
+        //le save fonctionne correctement
+        LoadHighScore();
+        highScoreShown.text = highScorePlayer + maxScore;
 
 
         const float step = 0.6f;
@@ -85,9 +87,14 @@ public class MainManager : MonoBehaviour
 
     public void GameOver()
     {
-
-        highScore.text = "Best Score: " + MenuManager.playerName + ": " + m_Points;
-        SaveHighScore();
+        if (maxScore < m_Points)
+        {
+            maxScore = m_Points;
+            highScorePlayer = "Best Score: " + MenuManager.playerName + ": ";
+            highScoreShown.text = highScorePlayer + maxScore;
+            SaveHighScore();
+        }
+        
 
         m_GameOver = true;
         GameOverText.SetActive(true);
@@ -96,14 +103,16 @@ public class MainManager : MonoBehaviour
     [System.Serializable]
     class SaveData
     {
-        public Text highScore;
+        public string highScorePlayer;
+        public int maxScore;
     }
 
 
     public void SaveHighScore()
     {
         SaveData data = new SaveData();
-        data.highScore = highScore;
+        data.highScorePlayer = highScorePlayer;
+        data.maxScore = maxScore;
 
         string json = JsonUtility.ToJson(data);
         File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
@@ -118,7 +127,8 @@ public class MainManager : MonoBehaviour
             string json = File.ReadAllText(path);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
 
-            highScore = data.highScore;
+            highScorePlayer = data.highScorePlayer;
+            maxScore = data.maxScore;
         }
     }
 
